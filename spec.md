@@ -1,15 +1,25 @@
-# Terminal Chat Assistant
+# Terminal Chatbot
 
 ## Overview
-A browser-based chat terminal that simulates a command-line interface with conversational AI capabilities.
+A browser-based chatbot that simulates a command-line interface with conversational capabilities and Windows-style window controls.
 
 ## Features
 
 ### Visual Design
 - Dark terminal-style interface with monospace font
-- macOS-style window frame with red, yellow, and green buttons
+- Windows-style window frame with minimize, maximize, and close buttons
 - Cyan text output on dark background
 - Green blinking cursor animation
+- Hidden "Peekaboo!" message in the background
+
+### Window Controls
+- **Close button (X)**: Hides the terminal window; click "Peekaboo!" to reopen
+- **Minimize button (-)**: Collapses the window to just the header bar
+  - Minimizing from fullscreen moves window to bottom-right corner
+  - Clicking the header bar reopens the window
+- **Maximize button (square)**: Toggles fullscreen mode
+  - Icon changes to stacked squares when maximized
+  - Window repositions to stay visible when leaving minimized state
 
 ### Interactivity
 - **Draggable window**: Click and drag the header bar to move the terminal
@@ -18,23 +28,25 @@ A browser-based chat terminal that simulates a command-line interface with conve
 - **Enter to submit**: Press enter to send messages
 
 ### Chat Responses
-The assistant responds to:
-- Greetings (hi, hello, hey)
+The chatbot responds to:
+- Greetings (hi, hello, hey, howdy, yo, sup)
 - "How are you" questions
 - Name introductions ("my name is...")
-- "What's your name" / "who are you"
+- "What's your name" / "who are you" - responds with "I'm Chatbot!"
 - Time and date requests
 - Jokes ("tell me a joke")
+- Compliments ("you're awesome")
 - Thank you / goodbye
 - Help command
-- Default responses for unrecognized input
+- Unrecognized input returns "no"
 
 ### Commands
 - `clear` - Resets the chat to initial state
+- `help` - Shows available commands and features
 
 ## Tech Stack
 - HTML5
-- CSS3 (animations, flexbox)
+- CSS3 (animations, flexbox, transitions)
 - Vanilla JavaScript (no dependencies)
 
 ## Live URL

@@ -18,6 +18,28 @@
             align-items: center;
             background: #1a1a2e;
             font-family: 'Courier New', Consolas, monospace;
+            position: relative;
+        }
+
+        .background-message {
+            position: absolute;
+            color: white;
+            font-size: 0.9rem;
+            font-family: 'Courier New', Consolas, monospace;
+            user-select: none;
+            pointer-events: none;
+            z-index: 0;
+            cursor: default;
+            transition: opacity 0.2s;
+        }
+
+        .background-message.clickable {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        .background-message.clickable:hover {
+            opacity: 0.7;
         }
 
         .terminal {
@@ -28,14 +50,14 @@
             overflow: hidden;
             position: absolute;
             cursor: default;
+            z-index: 1;
         }
 
         .terminal-header {
             background: #2d2d2d;
-            padding: 12px 16px;
+            padding: 8px 12px;
             display: flex;
             align-items: center;
-            gap: 8px;
             cursor: grab;
             user-select: none;
         }
@@ -44,15 +66,110 @@
             cursor: grabbing;
         }
 
-        .terminal-btn {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
+        .window-controls {
+            display: flex;
+            margin-left: auto;
+            gap: 0;
         }
 
-        .btn-red { background: #ff5f56; }
-        .btn-yellow { background: #ffbd2e; }
-        .btn-green { background: #27ca40; }
+        .terminal-btn {
+            width: 46px;
+            height: 30px;
+            border: none;
+            background: transparent;
+            color: #888;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.15s;
+        }
+
+        .terminal-btn:hover {
+            background: #3d3d3d;
+        }
+
+        .btn-close:hover {
+            background: #e81123;
+            color: white;
+        }
+
+        .btn-minimize:hover, .btn-maximize:hover {
+            background: #3d3d3d;
+            color: white;
+        }
+
+        .btn-minimize {
+            font-size: 22px;
+            margin-top: 3px;
+        }
+
+        .btn-maximize {
+            font-size: 26px;
+            line-height: 1;
+            margin-top: -3px;
+            position: relative;
+        }
+
+        .btn-maximize.restore {
+            font-size: 0;
+        }
+
+        .btn-maximize.restore::before {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border: 2px solid #888;
+            top: 8px;
+            left: 19px;
+        }
+
+        .btn-maximize.restore::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border: 2px solid #888;
+            top: 12px;
+            left: 15px;
+            background: #2d2d2d;
+        }
+
+        .btn-maximize.restore:hover::before,
+        .btn-maximize.restore:hover::after {
+            border-color: white;
+        }
+
+        .btn-maximize.restore:hover::after {
+            background: #3d3d3d;
+        }
+
+        .terminal.minimized .terminal-body {
+            display: none;
+        }
+
+        .terminal.minimized-corner {
+            bottom: 20px !important;
+            right: 20px !important;
+            left: auto !important;
+            top: auto !important;
+        }
+
+        .terminal.fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            top: 0 !important;
+            left: 0 !important;
+            border-radius: 0;
+        }
+
+        .terminal.fullscreen .terminal-body {
+            height: calc(100vh - 44px);
+            overflow-y: auto;
+        }
 
         .terminal-title {
             color: #888;
@@ -105,16 +222,19 @@
     </style>
 </head>
 <body>
+    <div class="background-message">Peekaboo!</div>
     <div class="terminal">
         <div class="terminal-header">
-            <div class="terminal-btn btn-red"></div>
-            <div class="terminal-btn btn-yellow"></div>
-            <div class="terminal-btn btn-green"></div>
-            <span class="terminal-title">chat</span>
+            <span class="terminal-title">Chatbot</span>
+            <div class="window-controls">
+                <button class="terminal-btn btn-minimize">&#8211;</button>
+                <button class="terminal-btn btn-maximize">&#9633;</button>
+                <button class="terminal-btn btn-close">&#10005;</button>
+            </div>
         </div>
         <div class="terminal-body">
-            <div class="output">Hello World! I'm Rachel's Terminal Assistant.</div>
-            <div class="output" style="font-size: 1rem; margin: 8px 0;">Type something to chat with me! Type "clear" to clear the chat.</div>
+            <div class="output">Hello World!</div>
+            <div class="output" style="font-size: 1rem; margin: 8px 0;">Type something to chat with me! Type "clear" to clear the chat. Type "Help" for help.</div>
             <div class="prompt input-line">> <span class="input-text"></span><span class="cursor"></span></div>
         </div>
     </div>
@@ -131,6 +251,41 @@
             offsetY = e.clientY - terminal.offsetTop;
         });
 
+        function ensureVisible() {
+            const rect = terminal.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            let newLeft = rect.left;
+            let newTop = rect.top;
+
+            if (rect.right > viewportWidth) {
+                newLeft -= (rect.right - viewportWidth + 10);
+            }
+            if (rect.bottom > viewportHeight) {
+                newTop -= (rect.bottom - viewportHeight + 10);
+            }
+            if (newLeft < 10) {
+                newLeft = 10;
+            }
+            if (newTop < 10) {
+                newTop = 10;
+            }
+
+            if (newLeft !== rect.left || newTop !== rect.top) {
+                terminal.style.left = newLeft + 'px';
+                terminal.style.top = newTop + 'px';
+            }
+        }
+
+        header.addEventListener('click', (e) => {
+            if (terminal.classList.contains('minimized')) {
+                terminal.classList.remove('minimized');
+                terminal.classList.remove('minimized-corner');
+                setTimeout(ensureVisible, 0);
+            }
+        });
+
         document.addEventListener('mousemove', (e) => {
             if (isDragging) {
                 terminal.style.left = (e.clientX - offsetX) + 'px';
@@ -140,6 +295,64 @@
 
         document.addEventListener('mouseup', () => {
             isDragging = false;
+        });
+
+        // Window control buttons
+        const btnClose = document.querySelector('.btn-close');
+        const btnMinimize = document.querySelector('.btn-minimize');
+        const btnFullscreen = document.querySelector('.btn-maximize');
+
+        const backgroundMessage = document.querySelector('.background-message');
+
+        btnClose.addEventListener('click', (e) => {
+            e.stopPropagation();
+            terminal.style.display = 'none';
+            backgroundMessage.classList.add('clickable');
+        });
+
+        backgroundMessage.addEventListener('click', () => {
+            if (backgroundMessage.classList.contains('clickable')) {
+                terminal.style.display = '';
+                terminal.classList.remove('fullscreen');
+                terminal.classList.remove('minimized');
+                terminal.classList.remove('minimized-corner');
+                btnFullscreen.classList.remove('restore');
+                backgroundMessage.classList.remove('clickable');
+            }
+        });
+
+        btnMinimize.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const wasFullscreen = terminal.classList.contains('fullscreen');
+            const wasMinimized = terminal.classList.contains('minimized');
+            terminal.classList.remove('fullscreen');
+
+            if (wasFullscreen) {
+                terminal.classList.toggle('minimized-corner');
+                terminal.classList.toggle('minimized');
+            } else {
+                terminal.classList.remove('minimized-corner');
+                terminal.classList.toggle('minimized');
+            }
+
+            if (wasMinimized) {
+                setTimeout(ensureVisible, 0);
+            }
+        });
+
+        btnFullscreen.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const wasMinimized = terminal.classList.contains('minimized');
+            terminal.classList.remove('minimized');
+            terminal.classList.remove('minimized-corner');
+            terminal.classList.toggle('fullscreen');
+
+            if (terminal.classList.contains('fullscreen')) {
+                btnFullscreen.classList.add('restore');
+            } else {
+                btnFullscreen.classList.remove('restore');
+                setTimeout(ensureVisible, 0);
+            }
         });
 
         // Terminal typing functionality
@@ -179,8 +392,8 @@
 
             if (cmd.toLowerCase() === 'clear') {
                 terminalBody.innerHTML = `
-                    <div class="output">Hello World! I'm Rachel's Terminal Assistant.</div>
-                    <div class="output" style="font-size: 1rem; margin: 8px 0;">Type something to chat with me! Type "clear" to clear the chat.</div>
+                    <div class="output">Hello World!</div>
+                    <div class="output" style="font-size: 1rem; margin: 8px 0;">Type something to chat with me! Type "clear" to clear the chat. Type "Help" for help.</div>
                 `;
             } else if (response) {
                 output.textContent = response;
@@ -214,7 +427,7 @@
 
             // Name questions
             if (/what('s| is) your name|who are you/.test(text)) {
-                return "I'm Rachel's Terminal Assistant!";
+                return "I'm Chatbot!";
             }
 
             // My name is
@@ -269,13 +482,7 @@
             }
 
             // Default response
-            const defaults = [
-                `Interesting! Tell me more about "${input}"`,
-                "I see! What else is on your mind?",
-                "That's cool! Anything else you'd like to chat about?",
-                `Hmm, "${input}" - that's something to think about!`
-            ];
-            return defaults[Math.floor(Math.random() * defaults.length)];
+            return "no";
         }
 
         function escapeHtml(text) {
@@ -284,5 +491,6 @@
             return div.innerHTML;
         }
     </script>
+
 </body>
 </html>
